@@ -47,8 +47,6 @@ public class PCMWriter implements AutoCloseable
     private Path mFile;
     private FileChannel mFileChannel;
     private boolean mDataChunkOpen = false;
-    private long mDataChunkSizeOffset = 0;
-    private int mDataChunkSize = 0;
 
     /**
      * Constructs a new PCM writer that is for writing buffers of PCM sample data.
@@ -171,11 +169,8 @@ public class PCMWriter implements AutoCloseable
         {
             while(buffer.hasRemaining())
             {
-                mDataChunkSize += mFileChannel.write(buffer);
+                mFileChannel.write(buffer);
             }
-
-            updateTotalSize();
-            updateDataChunkSize();
         }
         else
         {
@@ -195,11 +190,8 @@ public class PCMWriter implements AutoCloseable
 
             while(current.hasRemaining())
             {
-                mDataChunkSize += mFileChannel.write(current);
+                mFileChannel.write(current);
             }
-
-            updateTotalSize();
-            updateDataChunkSize();
 
             rollover();
 
@@ -207,11 +199,8 @@ public class PCMWriter implements AutoCloseable
 
             while(next.hasRemaining())
             {
-                mDataChunkSize += mFileChannel.write(next);
+                mFileChannel.write(next);
             }
-
-            updateTotalSize();
-            updateDataChunkSize();
         }
     }
 
@@ -238,11 +227,7 @@ public class PCMWriter implements AutoCloseable
                 rollover();
             }
 
-            mDataChunkSizeOffset = mFileChannel.size();
-            mDataChunkSize = 0;
             mDataChunkOpen = true;
-
-            updateTotalSize();
         }
     }
 
@@ -260,31 +245,6 @@ public class PCMWriter implements AutoCloseable
         updateFileName();
 
         open();
-    }
-
-    /**
-     * Updates the overall and the chunk2 sizes
-     */
-    private void updateTotalSize() throws IOException
-    {
-        /* Update overall wave size (total size - 8 bytes) */
-        ByteBuffer buffer = getUnsignedIntegerBuffer(mFileChannel.size() - 8);
-        mFileChannel.write(buffer, 4);
-    }
-
-    /**
-     * Updates the data chunk size
-     */
-    private void updateDataChunkSize() throws IOException
-    {
-        if(!mDataChunkOpen)
-        {
-            throw new IOException("Can't update data chunk size - data chunk is not currently open");
-        }
-
-        /* Update overall wave size (total size - 8 bytes) */
-        ByteBuffer size = getUnsignedIntegerBuffer(mDataChunkSize);
-        mFileChannel.write(size, mDataChunkSizeOffset);
     }
 
     /**

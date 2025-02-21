@@ -22,11 +22,15 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.math3.util.FastMath;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PCMFrameTools {
 
-    public final static int PCM_SAMPLE_LENGTH = 320;
-    private final static int SILENCE_FRAME_CNT = 6;
+    private final static Logger mLog = LoggerFactory.getLogger(PCMFrameTools.class);
+
+    public final static int PCM_SAMPLE_LENGTH = 320; // 20ms of audio at 8000 samples per second
+    private final static int SILENCE_FRAME_CNT = 6;  // 6 silence frames is 125ms of silence
 
     private static byte[] mSilenceFrame = new byte[PCM_SAMPLE_LENGTH];
 
@@ -51,7 +55,16 @@ public class PCMFrameTools {
         int offset = 0;
         while(offset < input.length)
         {
-            frames.add(Arrays.copyOfRange(input, offset, offset + FastMath.min(PCM_SAMPLE_LENGTH, input.length - offset)));
+            byte[] audio = Arrays.copyOfRange(input, offset, offset + FastMath.min(PCM_SAMPLE_LENGTH, input.length - offset));
+            if (audio.length < PCM_SAMPLE_LENGTH) {
+                mLog.warn("PCMAudioFrames.split() input audio egment < PCM_SAMPLE_LENGTH, filling missing audio");
+                byte[] paddedAudio = new byte[PCM_SAMPLE_LENGTH];
+                System.arraycopy(audio, 0, paddedAudio, 0, audio.length);
+                audio = paddedAudio;
+            }
+
+            frames.add(audio);
+
             audioDuration += (int) (((float) PCM_SAMPLE_LENGTH / (float) 8000 / (float) 1) * 1000);
             offset += PCM_SAMPLE_LENGTH;
         }

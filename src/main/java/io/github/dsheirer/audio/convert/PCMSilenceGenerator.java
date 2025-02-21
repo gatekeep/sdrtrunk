@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 public class PCMSilenceGenerator implements ISilenceGenerator
 {
-    private final static Logger mLog = LoggerFactory.getLogger(MP3SilenceGenerator.class);
+    private final static Logger mLog = LoggerFactory.getLogger(PCMSilenceGenerator.class);
 
     private InputAudioFormat mInputAudioFormat;
     private byte[] mSilenceFrame;
