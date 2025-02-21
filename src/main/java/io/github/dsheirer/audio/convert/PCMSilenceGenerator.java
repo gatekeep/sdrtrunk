@@ -49,7 +49,7 @@ public class PCMSilenceGenerator implements ISilenceGenerator
      */
     private void generate_frame()
     {
-        mSilenceFrame = new byte[320];
+        mSilenceFrame = new byte[PCMFrameTools.PCM_SAMPLE_LENGTH];
         mSilenceFrameDuration = 20;
     }
 
