@@ -183,23 +183,9 @@ public class AudioSegmentRecorder
         {
             PCMWriter writer = new PCMWriter(AudioFormats.PCM_SIGNED_8000_HZ_16_BIT_MONO, path);
             
-            // silence leader pad (injects ~250ms of silence at the beginning of the recording)
-            ByteBuffer silence = ByteBuffer.allocate(320 * 12);
-            for (int i = 0; i < 12; i++) {
-                silence.put(new byte[320]);
-            }
-
-            writer.writeData(silence);
-
             for(float[] audioBuffer: audioSegment.getAudioBuffers())
             {
                 writer.writeData(ConversionUtils.convertToSigned16BitSamples(audioBuffer));
-            }
-
-            // silence leader pad (injects ~125ms of silence at the end of the recording)
-            silence = ByteBuffer.allocate(320 * 6);
-            for (int i = 0; i < 6; i++) {
-                silence.put(new byte[320]);
             }
 
             writer.close();

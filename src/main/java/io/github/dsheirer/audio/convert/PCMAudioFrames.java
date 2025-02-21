@@ -42,7 +42,7 @@ public class PCMAudioFrames extends AudioFrames
      */
     public int getCurrentFrameDuration()
     {
-        return 10;
+        return 20;
     }
 
 }

@@ -30,9 +30,6 @@ public class PCMFrameTools {
     private final static Logger mLog = LoggerFactory.getLogger(PCMFrameTools.class);
 
     public final static int PCM_SAMPLE_LENGTH = 320; // 20ms of audio at 8000 samples per second
-    private final static int SILENCE_FRAME_CNT = 6;  // 6 silence frames is 125ms of silence
-
-    private static byte[] mSilenceFrame = new byte[PCM_SAMPLE_LENGTH];
 
     private PCMFrameTools() {}
 
@@ -45,12 +42,6 @@ public class PCMFrameTools {
     {
         List<byte[]> frames = new ArrayList<>();
         int audioDuration = 0;
-
-        // silence leader pad (injects ~125ms of silence at the beginning of the recording)
-        for (int i = 0; i < SILENCE_FRAME_CNT; i++) {
-            frames.add(mSilenceFrame);
-            audioDuration += (int) (((float) PCM_SAMPLE_LENGTH / (float) 8000 / (float) 1) * 1000);
-        }
 
         int offset = 0;
         while(offset < input.length)
@@ -67,12 +58,6 @@ public class PCMFrameTools {
 
             audioDuration += (int) (((float) PCM_SAMPLE_LENGTH / (float) 8000 / (float) 1) * 1000);
             offset += PCM_SAMPLE_LENGTH;
-        }
-
-        // silence follower pad (injects ~125ms of silence at the end of the recording)
-        for (int i = 0; i < SILENCE_FRAME_CNT; i++) {
-            frames.add(mSilenceFrame);
-            audioDuration += (int) (((float) PCM_SAMPLE_LENGTH / (float) 8000 / (float) 1) * 1000);
         }
 
         return new PCMAudioFrames(audioDuration, frames);
