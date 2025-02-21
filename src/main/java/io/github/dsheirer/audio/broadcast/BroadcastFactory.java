@@ -28,6 +28,8 @@ import io.github.dsheirer.audio.broadcast.rdioscanner.RdioScannerFeedConfigurati
 import io.github.dsheirer.audio.broadcast.openmhz.OpenMHzBroadcaster;
 import io.github.dsheirer.audio.broadcast.openmhz.OpenMHzConfiguration;
 import io.github.dsheirer.audio.broadcast.openmhz.OpenMHzFeedConfiguration;
+import io.github.dsheirer.audio.broadcast.rawpcm.RawPCMAudioBroadcaster;
+import io.github.dsheirer.audio.broadcast.rawpcm.RawPCMConfiguration;
 import io.github.dsheirer.audio.broadcast.icecast.IcecastHTTPAudioBroadcaster;
 import io.github.dsheirer.audio.broadcast.icecast.IcecastHTTPConfiguration;
 import io.github.dsheirer.audio.broadcast.icecast.IcecastTCPAudioBroadcaster;
@@ -40,6 +42,7 @@ import io.github.dsheirer.audio.convert.ISilenceGenerator;
 import io.github.dsheirer.audio.convert.InputAudioFormat;
 import io.github.dsheirer.audio.convert.MP3Setting;
 import io.github.dsheirer.audio.convert.MP3SilenceGenerator;
+import io.github.dsheirer.audio.convert.PCMSilenceGenerator;
 import io.github.dsheirer.preference.UserPreferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,6 +91,10 @@ public class BroadcastFactory
                 case SHOUTCAST_V2:
                     return new ShoutcastV2AudioStreamingBroadcaster((ShoutcastV2Configuration) configuration,
                             inputAudioFormat, mp3Setting, aliasModel);
+                case RAWPCM_UDP:
+                    mLog.debug("broadcast format: {}", configuration.getBroadcastFormat().name());
+                    return new RawPCMAudioBroadcaster((RawPCMConfiguration) configuration, 
+                            inputAudioFormat, mp3Setting, aliasModel);
                 case UNKNOWN:
                 default:
                     mLog.info("Unrecognized broadcastAudio configuration: " + configuration.getBroadcastFormat().name());
@@ -125,6 +132,8 @@ public class BroadcastFactory
                 return new ShoutcastV1Configuration(format);
             case SHOUTCAST_V2:
                 return new ShoutcastV2Configuration(format);
+            case RAWPCM_UDP:
+                return new RawPCMConfiguration(format);
             case UNKNOWN:
             default:
                 mLog.info("Unrecognized broadcastAudio server type: " + serverType.name());
@@ -140,6 +149,8 @@ public class BroadcastFactory
         {
             case MP3:
                 return new MP3SilenceGenerator(inputAudioFormat, mp3Setting);
+            case PCM:
+                return new PCMSilenceGenerator(inputAudioFormat, mp3Setting);
             default:
                 throw new IllegalArgumentException("Unrecognized broadcast format [" + format +
                     "] can't create silence generator");

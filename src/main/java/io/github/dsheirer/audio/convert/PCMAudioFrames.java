@@ -1,6 +1,6 @@
 /*
  * *****************************************************************************
- *  Copyright (C) 2014-2020 Dennis Sheirer
+ * Copyright (C) 2025 Bryan Biedenkapp, N2PLL
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,29 +17,32 @@
  * ****************************************************************************
  */
 
-package io.github.dsheirer.record;
+package io.github.dsheirer.audio.convert;
 
-/**
- * Audio recording formats
- */
-public enum RecordFormat
+import java.util.List;
+
+import org.apache.commons.math3.util.FastMath;
+
+public class PCMAudioFrames extends AudioFrames
 {
-    WAVE(".wav"),
-    MP3(".mp3"),
-    PCM(".pcm");
 
-    private String mExtension;
-
-    RecordFormat(String extension)
+    /**
+     * Create new PCMAudioFrames
+     * @param audioDuration total duration in milliseconds
+     * @param audioFrames series of audio frames, split on frame boundaries
+     */
+    public PCMAudioFrames(int audioDuration, List<byte[]> audioFrames)
     {
-        mExtension = extension;
+        super(audioDuration, audioFrames);
     }
 
     /**
-     * File extension
+     * Get current frame duration
+     * @return frame duration in milliseconds
      */
-    public String getExtension()
+    public int getCurrentFrameDuration()
     {
-        return mExtension;
+        return 10;
     }
+
 }

@@ -74,6 +74,9 @@ public class AudioStreamingManager implements Listener<AudioSegment>
         mAudioRecordingListener = listener;
         mBroadcastFormat = broadcastFormat;
         mUserPreferences = userPreferences;
+
+        if (mUserPreferences.getMP3Preference().isRecordAsPCM())
+            mBroadcastFormat = BroadcastFormat.PCM;
     }
 
     /**
@@ -231,7 +234,11 @@ public class AudioStreamingManager implements Listener<AudioSegment>
 
         try
         {
-            AudioSegmentRecorder.record(audioSegment, path, RecordFormat.MP3, mUserPreferences, identifierCollection);
+            if (mUserPreferences.getMP3Preference().isRecordAsPCM())
+                AudioSegmentRecorder.record(audioSegment, path, RecordFormat.PCM, mUserPreferences,
+                        identifierCollection);
+            else
+                AudioSegmentRecorder.record(audioSegment, path, RecordFormat.MP3, mUserPreferences, identifierCollection);
 
             AudioRecording audioRecording = new AudioRecording(path, broadcastChannels, identifierCollection,
                     audioSegment.getStartTimestamp(), length);

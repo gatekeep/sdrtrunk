@@ -47,6 +47,7 @@ public class MP3PreferenceEditor extends HBox
     private ComboBox<MP3Setting> mMP3SettingComboBox;
     private ComboBox<InputAudioFormat> mAudioSampleRateComboBox;
     private CheckBox mNormalizeAudioCheckBox;
+    private CheckBox mRecordAsPCMCheckBox;
 
     /**
      * Constructs an instance
@@ -87,6 +88,18 @@ public class MP3PreferenceEditor extends HBox
 
             Label notice = new Label("Note: sdrtrunk default 8 kHz audio rate is resampled to input sample rate before MP3 encoding");
             mEditorPane.add(notice, 0, row++, 2, 1);
+
+            mEditorPane.add(getRecordAsPCMCheckBox(), 1, row++);
+
+            if (getRecordAsPCMCheckBox().isSelected()) {
+                mMP3SettingComboBox.setDisable(true);
+                mAudioSampleRateComboBox.setDisable(true);
+                mNormalizeAudioCheckBox.setDisable(true);
+            } else {
+                mMP3SettingComboBox.setDisable(false);
+                mAudioSampleRateComboBox.setDisable(false);
+                mNormalizeAudioCheckBox.setDisable(false);
+            }
         }
 
         return mEditorPane;
@@ -162,14 +175,36 @@ public class MP3PreferenceEditor extends HBox
 
     private CheckBox getNormalizeAudioCheckBox()
     {
-        if(mNormalizeAudioCheckBox == null)
-        {
+        if (mNormalizeAudioCheckBox == null) {
             mNormalizeAudioCheckBox = new CheckBox("Normalize Audio Before Encoding");
             mNormalizeAudioCheckBox.setSelected(mMP3Preference.isNormalizeAudioBeforeEncode());
-            mNormalizeAudioCheckBox.onActionProperty().set(event ->
-                    mMP3Preference.setNormalizeAudioBeforeEncode(getNormalizeAudioCheckBox().isSelected()));
+            mNormalizeAudioCheckBox.onActionProperty().set(
+                    event -> mMP3Preference.setNormalizeAudioBeforeEncode(getNormalizeAudioCheckBox().isSelected()));
         }
 
         return mNormalizeAudioCheckBox;
+    }
+
+    private CheckBox getRecordAsPCMCheckBox()
+    {
+        if(mRecordAsPCMCheckBox == null)
+        {
+            mRecordAsPCMCheckBox = new CheckBox("Record Audio as Raw PCM");
+            mRecordAsPCMCheckBox.setSelected(mMP3Preference.isRecordAsPCM());
+            mRecordAsPCMCheckBox.onActionProperty().set(event -> {
+                mMP3Preference.setRecordAsPCM(getRecordAsPCMCheckBox().isSelected());
+                if (getRecordAsPCMCheckBox().isSelected()) {
+                    mMP3SettingComboBox.setDisable(true);
+                    mAudioSampleRateComboBox.setDisable(true);
+                    mNormalizeAudioCheckBox.setDisable(true);
+                } else {
+                    mMP3SettingComboBox.setDisable(false);
+                    mAudioSampleRateComboBox.setDisable(false);
+                    mNormalizeAudioCheckBox.setDisable(false);
+                }
+            });
+        }
+
+        return mRecordAsPCMCheckBox;
     }
 }

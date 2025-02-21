@@ -23,10 +23,14 @@ import io.github.dsheirer.audio.convert.ISilenceGenerator;
 import io.github.dsheirer.audio.convert.InputAudioFormat;
 import io.github.dsheirer.audio.convert.MP3FrameTools;
 import io.github.dsheirer.audio.convert.MP3Setting;
+import io.github.dsheirer.audio.convert.PCMAudioFrames;
+import io.github.dsheirer.audio.convert.PCMFrameTools;
 import io.github.dsheirer.identifier.IdentifierCollection;
 import io.github.dsheirer.util.ThreadPool;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.ScheduledFuture;
@@ -85,7 +89,7 @@ public abstract class AudioStreamingBroadcaster<T extends BroadcastConfiguration
         mDelay = getBroadcastConfiguration().getDelay();
         mMaximumRecordingAge = getBroadcastConfiguration().getMaximumRecordingAge();
         mSilenceGenerator = BroadcastFactory.getSilenceGenerator(broadcastConfiguration.getBroadcastFormat(),
-        inputAudioFormat, mp3Setting);
+                inputAudioFormat, mp3Setting);
     }
 
     public void dispose()
@@ -303,6 +307,11 @@ public abstract class AudioStreamingBroadcaster<T extends BroadcastConfiguration
                             mInputFrames.nextFrame();
                             broadcastAudio(mInputFrames.getCurrentFrame(), mInputIdentifierCollection);
                             timeSent += mInputFrames.getCurrentFrameDuration();
+
+                            mLog.debug("timeSent: " + timeSent);
+
+                            if (mBroadcastFormat == BroadcastFormat.PCM)
+                                Thread.sleep(25);
                         }
                     }
 
@@ -374,10 +383,17 @@ public abstract class AudioStreamingBroadcaster<T extends BroadcastConfiguration
 
                         if(audio.length > 0)
                         {
+                            mLog.debug("Stream [" + getBroadcastConfiguration().getName() + "] loaded temporary audio " +
+                                    "stream recording [" + nextRecording.getPath().toString() + "] {}/{}",
+                                    mBroadcastFormat.name(), mBroadcastFormat.getFileExtension());
+
                             switch(mBroadcastFormat)
                             {
                                 case MP3:
                                     mInputFrames = MP3FrameTools.split(audio);
+                                    break;
+                                case PCM:
+                                    mInputFrames = PCMFrameTools.split(audio);
                                     break;
                                 default:
                                     throw new IllegalArgumentException("Unsupported broadcast format [" + mBroadcastFormat + "]");

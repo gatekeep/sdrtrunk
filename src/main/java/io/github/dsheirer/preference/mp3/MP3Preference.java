@@ -36,12 +36,15 @@ public class MP3Preference extends Preference
     private static final String PREFERENCE_KEY_AUDIO_MP3_SETTING = "audio.mp3.setting";
     private static final String PREFERENCE_KEY_AUDIO_MP3_SAMPLE_RATE = "audio.mp3.sample.rate";
     private static final String PREFERENCE_KEY_AUDIO_MP3_NORMALIZE_BEFORE_ENCODE = "audio.mp3.normalize.before.encode";
+    private static final String PREFERENCE_KEY_AUDIO_RECORD_AS_PCM = "audio.mp3.record.as.pcm";
     private final static Logger mLog = LoggerFactory.getLogger(MP3Preference.class);
     private Preferences mPreferences = Preferences.userNodeForPackage(MP3Preference.class);
     private InputAudioFormat mInputAudioFormat;
     private MP3Setting mMP3Setting;
 
     private Boolean mNormalizeAudio;
+
+    private Boolean mRecordAsPCM;
 
     /**
      * Constructs this preference with an update listener
@@ -171,6 +174,31 @@ public class MP3Preference extends Preference
     {
         mNormalizeAudio = normalizeAudio;
         mPreferences.putBoolean(PREFERENCE_KEY_AUDIO_MP3_NORMALIZE_BEFORE_ENCODE, normalizeAudio);
+        notifyPreferenceUpdated();
+    }
+
+    /**
+     * Indicates if the user prefers to record audio as raw PCM instead of MP3.
+     * @return true to record as PCM
+     */
+    public boolean isRecordAsPCM()
+    {
+        if(mRecordAsPCM == null)
+        {
+            mRecordAsPCM = mPreferences.getBoolean(PREFERENCE_KEY_AUDIO_RECORD_AS_PCM, false);
+        }
+
+        return mRecordAsPCM;
+    }
+
+    /**
+     * Sets the preferenced to record raw PCM instead of MP3.
+     * @param recordAsPCM true to record as PCM
+     */
+    public void setRecordAsPCM(boolean recordAsPCM)
+    {
+        mRecordAsPCM = recordAsPCM;
+        mPreferences.putBoolean(PREFERENCE_KEY_AUDIO_RECORD_AS_PCM, recordAsPCM);
         notifyPreferenceUpdated();
     }
 }

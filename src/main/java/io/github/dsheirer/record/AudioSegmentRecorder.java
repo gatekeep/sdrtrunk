@@ -28,6 +28,7 @@ import io.github.dsheirer.identifier.IdentifierCollection;
 import io.github.dsheirer.preference.UserPreferences;
 import io.github.dsheirer.record.wave.AudioMetadata;
 import io.github.dsheirer.record.wave.AudioMetadataUtils;
+import io.github.dsheirer.record.wave.PCMWriter;
 import io.github.dsheirer.record.wave.WaveWriter;
 import io.github.dsheirer.sample.ConversionUtils;
 import java.io.FileOutputStream;
@@ -81,6 +82,9 @@ public class AudioSegmentRecorder
                 break;
             case WAVE:
                 recordWAVE(audioSegment, path, identifierCollection);
+                break;
+            case PCM:
+                recordPCM(audioSegment, path, identifierCollection);
                 break;
             default:
                 throw new IllegalArgumentException("Unrecognized recording format [" + recordFormat.name() + "]");
@@ -162,6 +166,28 @@ public class AudioSegmentRecorder
             byte[] id3Bytes = AudioMetadataUtils.getMP3ID3(metadataMap);
             ByteBuffer id3Chunk = AudioMetadataUtils.getID3Chunk(id3Bytes);
             writer.writeMetadata(listChunk, id3Chunk);
+            writer.close();
+        }
+    }
+
+    /**
+     * Records the audio segment as a raw PCM file to the specified path.
+     * @param audioSegment to record
+     * @param path for the recording
+     * @param identifierCollection to use instead of the audioSegment's embedded identifier collection
+     * @throws IOException on any errors
+     */
+    public static void recordPCM(AudioSegment audioSegment, Path path, IdentifierCollection identifierCollection) throws IOException
+    {
+        if(audioSegment.hasAudio())
+        {
+            PCMWriter writer = new PCMWriter(AudioFormats.PCM_SIGNED_8000_HZ_16_BIT_MONO, path);
+
+            for(float[] audioBuffer: audioSegment.getAudioBuffers())
+            {
+                writer.writeData(ConversionUtils.convertToSigned16BitSamples(audioBuffer));
+            }
+
             writer.close();
         }
     }
