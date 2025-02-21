@@ -26,6 +26,7 @@ import org.apache.commons.math3.util.FastMath;
 public class PCMFrameTools {
 
     public final static int PCM_SAMPLE_LENGTH = 320;
+    private final static int SILENCE_FRAME_CNT = 6;
 
     private static byte[] mSilenceFrame = new byte[PCM_SAMPLE_LENGTH];
 
@@ -41,8 +42,8 @@ public class PCMFrameTools {
         List<byte[]> frames = new ArrayList<>();
         int audioDuration = 0;
 
-        // silence pad
-        for (int i = 0; i < 4; i++) {
+        // silence leader pad
+        for (int i = 0; i < SILENCE_FRAME_CNT; i++) {
             frames.add(mSilenceFrame);
             audioDuration += (int) (((float) PCM_SAMPLE_LENGTH / (float) 8000 / (float) 1) * 1000);
         }
@@ -55,8 +56,8 @@ public class PCMFrameTools {
             offset += PCM_SAMPLE_LENGTH;
         }
 
-        // silence pad
-        for (int i = 0; i < 4; i++) {
+        // silence follower pad
+        for (int i = 0; i < SILENCE_FRAME_CNT; i++) {
             frames.add(mSilenceFrame);
             audioDuration += (int) (((float) PCM_SAMPLE_LENGTH / (float) 8000 / (float) 1) * 1000);
         }

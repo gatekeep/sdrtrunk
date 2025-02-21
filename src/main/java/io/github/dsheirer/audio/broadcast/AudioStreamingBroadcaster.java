@@ -308,10 +308,8 @@ public abstract class AudioStreamingBroadcaster<T extends BroadcastConfiguration
                             broadcastAudio(mInputFrames.getCurrentFrame(), mInputIdentifierCollection);
                             timeSent += mInputFrames.getCurrentFrameDuration();
 
-                            mLog.debug("timeSent: " + timeSent);
-
                             if (mBroadcastFormat == BroadcastFormat.PCM)
-                                Thread.sleep(25);
+                                Thread.sleep(15);
                         }
                     }
 
