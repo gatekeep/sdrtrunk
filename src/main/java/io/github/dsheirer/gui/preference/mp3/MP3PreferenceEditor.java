@@ -90,16 +90,6 @@ public class MP3PreferenceEditor extends HBox
             mEditorPane.add(notice, 0, row++, 2, 1);
 
             mEditorPane.add(getRecordAsPCMCheckBox(), 1, row++);
-
-            if (getRecordAsPCMCheckBox().isSelected()) {
-                mMP3SettingComboBox.setDisable(true);
-                mAudioSampleRateComboBox.setDisable(true);
-                mNormalizeAudioCheckBox.setDisable(true);
-            } else {
-                mMP3SettingComboBox.setDisable(false);
-                mAudioSampleRateComboBox.setDisable(false);
-                mNormalizeAudioCheckBox.setDisable(false);
-            }
         }
 
         return mEditorPane;
@@ -193,15 +183,6 @@ public class MP3PreferenceEditor extends HBox
             mRecordAsPCMCheckBox.setSelected(mMP3Preference.isRecordAsPCM());
             mRecordAsPCMCheckBox.onActionProperty().set(event -> {
                 mMP3Preference.setRecordAsPCM(getRecordAsPCMCheckBox().isSelected());
-                if (getRecordAsPCMCheckBox().isSelected()) {
-                    mMP3SettingComboBox.setDisable(true);
-                    mAudioSampleRateComboBox.setDisable(true);
-                    mNormalizeAudioCheckBox.setDisable(true);
-                } else {
-                    mMP3SettingComboBox.setDisable(false);
-                    mAudioSampleRateComboBox.setDisable(false);
-                    mNormalizeAudioCheckBox.setDisable(false);
-                }
             });
         }
 

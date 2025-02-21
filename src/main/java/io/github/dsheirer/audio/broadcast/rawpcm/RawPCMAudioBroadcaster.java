@@ -130,8 +130,8 @@ public class RawPCMAudioBroadcaster extends AudioStreamingBroadcaster
             try {
                 DatagramPacket packet = new DatagramPacket(pkt, pkt.length,
                         InetAddress.getByName(mConfiguration.getHost()), mConfiguration.getPort());
-                mLog.debug("Sending audio packet to {}:{}, len {}, srcId {}, dstId {}", mConfiguration.getHost(),
-                        mConfiguration.getPort(), pkt.length, srcId, dstId);
+                //mLog.debug("Sending audio packet to {}:{}, len {}, srcId {}, dstId {}", mConfiguration.getHost(),
+                //        mConfiguration.getPort(), pkt.length, srcId, dstId);
                 mSocket.send(packet);
             } catch (IOException e) {
                 mLog.error("Failed to send audio packet", e);

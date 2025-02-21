@@ -36,6 +36,8 @@ import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.apache.commons.compress.utils.FileNameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -377,14 +379,35 @@ public abstract class AudioStreamingBroadcaster<T extends BroadcastConfiguration
                 {
                     if(Files.exists(nextRecording.getPath()))
                     {
+                        String ext = FileNameUtils.getExtension(nextRecording.getPath().toString());
+                        switch(mBroadcastFormat)
+                        {
+                            case MP3:
+                                if (ext.toLowerCase().equals("pcm")) {
+                                    mLog.debug("Stream [" + getBroadcastConfiguration().getName() + "] skipping temporary audio " +
+                                        "stream recording [" + nextRecording.getPath().toString() + "] incompatible broadcast format");
+                                    nextRecording.removePendingReplay();
+                                    broadcast(new BroadcastEvent(AudioStreamingBroadcaster.this, BroadcastEvent.Event.BROADCASTER_QUEUE_CHANGE));
+                                    return;
+                                }
+                                break;
+                            case PCM:
+                                if (ext.toLowerCase().equals("mp3")) {
+                                    mLog.debug("Stream [" + getBroadcastConfiguration().getName() + "] skipping temporary audio " +
+                                        "stream recording [" + nextRecording.getPath().toString() + "] incompatible broadcast format");
+                                    nextRecording.removePendingReplay();
+                                    broadcast(new BroadcastEvent(AudioStreamingBroadcaster.this, BroadcastEvent.Event.BROADCASTER_QUEUE_CHANGE));
+                                    return;
+                                }
+                                break;
+                            default:
+                                throw new IllegalArgumentException("Unsupported broadcast format [" + mBroadcastFormat + "]");
+                        }
+
                         byte[] audio = Files.readAllBytes(nextRecording.getPath());
 
                         if(audio.length > 0)
                         {
-                            mLog.debug("Stream [" + getBroadcastConfiguration().getName() + "] loaded temporary audio " +
-                                    "stream recording [" + nextRecording.getPath().toString() + "] {}/{}",
-                                    mBroadcastFormat.name(), mBroadcastFormat.getFileExtension());
-
                             switch(mBroadcastFormat)
                             {
                                 case MP3:

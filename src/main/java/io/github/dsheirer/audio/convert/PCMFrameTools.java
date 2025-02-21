@@ -42,7 +42,7 @@ public class PCMFrameTools {
         List<byte[]> frames = new ArrayList<>();
         int audioDuration = 0;
 
-        // silence leader pad
+        // silence leader pad (injects ~125ms of silence at the beginning of the recording)
         for (int i = 0; i < SILENCE_FRAME_CNT; i++) {
             frames.add(mSilenceFrame);
             audioDuration += (int) (((float) PCM_SAMPLE_LENGTH / (float) 8000 / (float) 1) * 1000);
@@ -56,7 +56,7 @@ public class PCMFrameTools {
             offset += PCM_SAMPLE_LENGTH;
         }
 
-        // silence follower pad
+        // silence follower pad (injects ~125ms of silence at the end of the recording)
         for (int i = 0; i < SILENCE_FRAME_CNT; i++) {
             frames.add(mSilenceFrame);
             audioDuration += (int) (((float) PCM_SAMPLE_LENGTH / (float) 8000 / (float) 1) * 1000);

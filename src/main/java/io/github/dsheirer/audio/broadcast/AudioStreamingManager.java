@@ -74,9 +74,6 @@ public class AudioStreamingManager implements Listener<AudioSegment>
         mAudioRecordingListener = listener;
         mBroadcastFormat = broadcastFormat;
         mUserPreferences = userPreferences;
-
-        if (mUserPreferences.getMP3Preference().isRecordAsPCM())
-            mBroadcastFormat = BroadcastFormat.PCM;
     }
 
     /**
@@ -222,7 +219,6 @@ public class AudioStreamingManager implements Listener<AudioSegment>
     private void processAudioSegment(AudioSegment audioSegment, IdentifierCollection identifierCollection,
                                      Set<BroadcastChannel> broadcastChannels)
     {
-        Path path = getTemporaryRecordingPath();
         long length = 0;
 
         for(float[] audioBuffer: audioSegment.getAudioBuffers())
@@ -234,11 +230,18 @@ public class AudioStreamingManager implements Listener<AudioSegment>
 
         try
         {
-            if (mUserPreferences.getMP3Preference().isRecordAsPCM())
+            if (mUserPreferences.getMP3Preference().isRecordAsPCM()) {
+                Path path = getTemporaryRecordingPath(BroadcastFormat.PCM);
                 AudioSegmentRecorder.record(audioSegment, path, RecordFormat.PCM, mUserPreferences,
                         identifierCollection);
-            else
-                AudioSegmentRecorder.record(audioSegment, path, RecordFormat.MP3, mUserPreferences, identifierCollection);
+
+                AudioRecording audioRecording = new AudioRecording(path, broadcastChannels, identifierCollection,
+                        audioSegment.getStartTimestamp(), length);
+                mAudioRecordingListener.receive(audioRecording);
+            }
+
+            Path path = getTemporaryRecordingPath(mBroadcastFormat);
+            AudioSegmentRecorder.record(audioSegment, path, RecordFormat.MP3, mUserPreferences, identifierCollection);
 
             AudioRecording audioRecording = new AudioRecording(path, broadcastChannels, identifierCollection,
                     audioSegment.getStartTimestamp(), length);
@@ -252,8 +255,9 @@ public class AudioStreamingManager implements Listener<AudioSegment>
 
     /**
      * Creates a temporary streaming recording file path
+     * @param format to use for the temporary recording
      */
-    private Path getTemporaryRecordingPath()
+    private Path getTemporaryRecordingPath(BroadcastFormat format)
     {
         StringBuilder sb = new StringBuilder();
         sb.append(BroadcastModel.TEMPORARY_STREAM_FILE_SUFFIX);
@@ -268,7 +272,7 @@ public class AudioStreamingManager implements Listener<AudioSegment>
 
         sb.append(recordingNumber).append("_");
         sb.append(TimeStamp.getLongTimeStamp("_"));
-        sb.append(mBroadcastFormat.getFileExtension());
+        sb.append(format.getFileExtension());
 
         Path temporaryRecordingPath = mUserPreferences.getDirectoryPreference().getDirectoryStreaming().resolve(sb.toString());
 
