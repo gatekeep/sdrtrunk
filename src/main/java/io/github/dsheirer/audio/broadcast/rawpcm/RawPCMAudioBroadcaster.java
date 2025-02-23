@@ -91,12 +91,8 @@ public class RawPCMAudioBroadcaster extends AudioStreamingBroadcaster
             pkt[3] = (byte) ((length >> 0) & 255);
             pktOffs += 4;
 
-            int j = 0;
-            for (j = 0; j < PCMFrameTools.PCM_SAMPLE_LENGTH; j++) {
-                pkt[j + pktOffs] = audio[j];
-            }
-
-            pktOffs += j;
+            System.arraycopy(audio, 0, pkt, pktOffs, PCMFrameTools.PCM_SAMPLE_LENGTH);
+            pktOffs += PCMFrameTools.PCM_SAMPLE_LENGTH;
 
             Identifier to = null;
             if (identifierCollection != null)
