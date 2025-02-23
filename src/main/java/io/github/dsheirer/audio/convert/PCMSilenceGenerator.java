@@ -62,13 +62,13 @@ public class PCMSilenceGenerator implements ISilenceGenerator
     {
         List<byte[]> silenceFrames = new ArrayList<>();
         int silenceDuration = 0;
-/*
-        while(silenceDuration < duration_ms)
-        {
-            silenceFrames.add(mSilenceFrame);
+
+        // this intentionally returns no frames -- otherwise we'd generate a lot of silence
+        // and dvmbridge doesn't need silence frames
+
+        while (silenceDuration < duration_ms)
             silenceDuration += mSilenceFrameDuration;
-        }
-*/
+
         return new PCMAudioFrames(silenceDuration, silenceFrames);
     }
 
