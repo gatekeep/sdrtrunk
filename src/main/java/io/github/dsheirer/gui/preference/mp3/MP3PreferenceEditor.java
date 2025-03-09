@@ -48,6 +48,7 @@ public class MP3PreferenceEditor extends HBox
     private ComboBox<InputAudioFormat> mAudioSampleRateComboBox;
     private CheckBox mNormalizeAudioCheckBox;
     private CheckBox mRecordAsPCMCheckBox;
+    private CheckBox mRecordPCMLeaderCheckBox;
 
     /**
      * Constructs an instance
@@ -90,6 +91,7 @@ public class MP3PreferenceEditor extends HBox
             mEditorPane.add(notice, 0, row++, 2, 1);
 
             mEditorPane.add(getRecordAsPCMCheckBox(), 1, row++);
+            mEditorPane.add(getRecordPCMLeaderCheckBox(), 1, row++);
         }
 
         return mEditorPane;
@@ -177,8 +179,7 @@ public class MP3PreferenceEditor extends HBox
 
     private CheckBox getRecordAsPCMCheckBox()
     {
-        if(mRecordAsPCMCheckBox == null)
-        {
+        if (mRecordAsPCMCheckBox == null) {
             mRecordAsPCMCheckBox = new CheckBox("Record Audio as Raw PCM");
             mRecordAsPCMCheckBox.setSelected(mMP3Preference.isRecordAsPCM());
             mRecordAsPCMCheckBox.onActionProperty().set(event -> {
@@ -187,5 +188,19 @@ public class MP3PreferenceEditor extends HBox
         }
 
         return mRecordAsPCMCheckBox;
+    }
+
+    private CheckBox getRecordPCMLeaderCheckBox()
+    {
+        if(mRecordPCMLeaderCheckBox == null)
+        {
+            mRecordPCMLeaderCheckBox = new CheckBox("Record a 250ms silence leader for PCM audio");
+            mRecordPCMLeaderCheckBox.setSelected(mMP3Preference.isRecordPCMLeader());
+            mRecordPCMLeaderCheckBox.onActionProperty().set(event -> {
+                mMP3Preference.setRecordPCMLeader(getRecordPCMLeaderCheckBox().isSelected());
+            });
+        }
+
+        return mRecordPCMLeaderCheckBox;
     }
 }

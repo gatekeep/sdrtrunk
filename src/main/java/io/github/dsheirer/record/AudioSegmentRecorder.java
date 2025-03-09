@@ -84,7 +84,7 @@ public class AudioSegmentRecorder
                 recordWAVE(audioSegment, path, identifierCollection);
                 break;
             case PCM:
-                recordPCM(audioSegment, path, identifierCollection);
+                recordPCM(audioSegment, path, userPreferences, identifierCollection);
                 break;
             default:
                 throw new IllegalArgumentException("Unrecognized recording format [" + recordFormat.name() + "]");
@@ -174,15 +174,26 @@ public class AudioSegmentRecorder
      * Records the audio segment as a raw PCM file to the specified path.
      * @param audioSegment to record
      * @param path for the recording
+     * @param userPreferences for configuration
      * @param identifierCollection to use instead of the audioSegment's embedded identifier collection
      * @throws IOException on any errors
      */
-    public static void recordPCM(AudioSegment audioSegment, Path path, IdentifierCollection identifierCollection) throws IOException
+    public static void recordPCM(AudioSegment audioSegment, Path path, UserPreferences userPreferences, 
+                                 IdentifierCollection identifierCollection) throws IOException
     {
         if(audioSegment.hasAudio())
         {
             PCMWriter writer = new PCMWriter(AudioFormats.PCM_SIGNED_8000_HZ_16_BIT_MONO, path);
             
+            // silence leader padding
+            if (userPreferences.getMP3Preference().isRecordPCMLeader()) {
+                ByteBuffer silence = ByteBuffer.allocate(320 * 16);
+                for (int i = 0; i < 16; i++) {
+                    silence.put(new byte[320]);
+                }
+                writer.writeData(silence);
+            }
+
             for(float[] audioBuffer: audioSegment.getAudioBuffers())
             {
                 writer.writeData(ConversionUtils.convertToSigned16BitSamples(audioBuffer));

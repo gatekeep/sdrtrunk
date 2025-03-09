@@ -37,6 +37,7 @@ public class MP3Preference extends Preference
     private static final String PREFERENCE_KEY_AUDIO_MP3_SAMPLE_RATE = "audio.mp3.sample.rate";
     private static final String PREFERENCE_KEY_AUDIO_MP3_NORMALIZE_BEFORE_ENCODE = "audio.mp3.normalize.before.encode";
     private static final String PREFERENCE_KEY_AUDIO_RECORD_AS_PCM = "audio.mp3.record.as.pcm";
+    private static final String PREFERENCE_KEY_AUDIO_RECORD_PCM_LEADER = "audio.mp3.record.pcm.leader";
     private final static Logger mLog = LoggerFactory.getLogger(MP3Preference.class);
     private Preferences mPreferences = Preferences.userNodeForPackage(MP3Preference.class);
     private InputAudioFormat mInputAudioFormat;
@@ -45,6 +46,7 @@ public class MP3Preference extends Preference
     private Boolean mNormalizeAudio;
 
     private Boolean mRecordAsPCM;
+    private Boolean mRecordPCMLeader;
 
     /**
      * Constructs this preference with an update listener
@@ -199,6 +201,31 @@ public class MP3Preference extends Preference
     {
         mRecordAsPCM = recordAsPCM;
         mPreferences.putBoolean(PREFERENCE_KEY_AUDIO_RECORD_AS_PCM, recordAsPCM);
+        notifyPreferenceUpdated();
+    }
+
+    /**
+     * Indicates if the user prefers to record a silence leader for PCM audio.
+     * @return true to record as PCM
+     */
+    public boolean isRecordPCMLeader()
+    {
+        if(mRecordPCMLeader == null)
+        {
+            mRecordPCMLeader = mPreferences.getBoolean(PREFERENCE_KEY_AUDIO_RECORD_PCM_LEADER, false);
+        }
+
+        return mRecordPCMLeader;
+    }
+
+    /**
+     * Sets the preferenced to record a silence leader for PCM audio.
+     * @param recordPCMLeader true to record a silence leader for PCM audio
+     */
+    public void setRecordPCMLeader(boolean recordPCMLeader)
+    {
+        mRecordPCMLeader = recordPCMLeader;
+        mPreferences.putBoolean(PREFERENCE_KEY_AUDIO_RECORD_PCM_LEADER, recordPCMLeader);
         notifyPreferenceUpdated();
     }
 }
