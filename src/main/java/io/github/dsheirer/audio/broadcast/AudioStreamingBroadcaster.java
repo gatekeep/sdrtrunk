@@ -309,9 +309,6 @@ public abstract class AudioStreamingBroadcaster<T extends BroadcastConfiguration
                             mInputFrames.nextFrame();
                             broadcastAudio(mInputFrames.getCurrentFrame(), mInputIdentifierCollection);
                             timeSent += mInputFrames.getCurrentFrameDuration();
-
-                            if (mBroadcastFormat == BroadcastFormat.PCM && mInputFrames.hasNextFrame())
-                                Thread.sleep(mInputFrames.getCurrentFrameDuration());
                         }
                     }
 
