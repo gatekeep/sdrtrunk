@@ -304,28 +304,30 @@ public abstract class AudioStreamingBroadcaster<T extends BroadcastConfiguration
 
                     if(mInputFrames != null && mInputFrames.hasNextFrame())
                     {
-                        while(mInputFrames.hasNextFrame() && timeSent < PROCESSOR_RUN_INTERVAL_MS)
+                        while (mInputFrames.hasNextFrame() && timeSent < PROCESSOR_RUN_INTERVAL_MS) 
                         {
                             mInputFrames.nextFrame();
                             broadcastAudio(mInputFrames.getCurrentFrame(), mInputIdentifierCollection);
-                            timeSent += mInputFrames.getCurrentFrameDuration();
+
+                            if (mBroadcastFormat == BroadcastFormat.PCM)
+                                Thread.sleep(2);
+                            else
+                                timeSent += mInputFrames.getCurrentFrameDuration();
                         }
                     }
 
-                    if((mInputFrames == null || !mInputFrames.hasNextFrame()) && timeSent < PROCESSOR_RUN_INTERVAL_MS)
+                    if (mBroadcastFormat != BroadcastFormat.PCM)
                     {
-                        AudioFrames silenceFrames = mSilenceGenerator.generate(PROCESSOR_RUN_INTERVAL_MS - mTimeOverrun - timeSent);
-                        while(silenceFrames.hasNextFrame())
+                        if((mInputFrames == null || !mInputFrames.hasNextFrame()) && timeSent < PROCESSOR_RUN_INTERVAL_MS)
                         {
-                            silenceFrames.nextFrame();
-                            broadcastAudio(silenceFrames.getCurrentFrame(), null);
-                            timeSent += silenceFrames.getCurrentFrameDuration();
+                            AudioFrames silenceFrames = mSilenceGenerator.generate(PROCESSOR_RUN_INTERVAL_MS - mTimeOverrun - timeSent);
+                            while(silenceFrames.hasNextFrame())
+                            {
+                                silenceFrames.nextFrame();
+                                broadcastAudio(silenceFrames.getCurrentFrame(), null);
+                                timeSent += silenceFrames.getCurrentFrameDuration();
+                            }
                         }
-
-                        // bryanb: for PCM, we need to add the duration of the silence frames to the timeSent since
-                        // generate for the PCMSilenceGenerator returns an empty list
-                        if (mBroadcastFormat == BroadcastFormat.PCM)
-                            timeSent += silenceFrames.getDuration();
                     }
 
                     mTimeOverrun += timeSent - PROCESSOR_RUN_INTERVAL_MS;

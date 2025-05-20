@@ -187,8 +187,8 @@ public class AudioSegmentRecorder
             
             // silence leader padding
             if (userPreferences.getMP3Preference().isRecordPCMLeader()) {
-                ByteBuffer silence = ByteBuffer.allocate(320 * 16);
-                for (int i = 0; i < 16; i++) {
+                ByteBuffer silence = ByteBuffer.allocate(320 * 24);
+                for (int i = 0; i < 24; i++) {
                     silence.put(new byte[320]);
                 }
                 writer.writeData(silence);
