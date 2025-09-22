@@ -46,15 +46,16 @@ public class PCMFrameTools {
         int offset = 0;
         while(offset < input.length)
         {
-            byte[] audio = Arrays.copyOfRange(input, offset, offset + FastMath.min(PCM_SAMPLE_LENGTH, input.length - offset));
+            byte[] audio = Arrays.copyOfRange(input, offset, offset + FastMath.min(input.length - offset, PCM_SAMPLE_LENGTH));
             if (audio.length < PCM_SAMPLE_LENGTH) {
                 mLog.warn("PCMAudioFrames.split() input audio egment < PCM_SAMPLE_LENGTH, filling missing audio");
+
                 byte[] paddedAudio = new byte[PCM_SAMPLE_LENGTH];
                 System.arraycopy(audio, 0, paddedAudio, 0, audio.length);
-                audio = paddedAudio;
+                frames.add(paddedAudio);
+            } else {
+                frames.add(audio);
             }
-
-            frames.add(audio);
 
             audioDuration += (int) (((float) PCM_SAMPLE_LENGTH / (float) 8000 / (float) 1) * 1000);
             offset += PCM_SAMPLE_LENGTH;
@@ -62,5 +63,4 @@ public class PCMFrameTools {
 
         return new PCMAudioFrames(audioDuration, frames);
     }
-
 }

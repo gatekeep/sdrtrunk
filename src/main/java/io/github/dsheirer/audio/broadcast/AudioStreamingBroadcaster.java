@@ -18,6 +18,7 @@
  */
 package io.github.dsheirer.audio.broadcast;
 
+import io.github.dsheirer.audio.broadcast.BroadcastFormat;
 import io.github.dsheirer.audio.convert.AudioFrames;
 import io.github.dsheirer.audio.convert.ISilenceGenerator;
 import io.github.dsheirer.audio.convert.InputAudioFormat;
@@ -46,6 +47,7 @@ public abstract class AudioStreamingBroadcaster<T extends BroadcastConfiguration
     private final static Logger mLog = LoggerFactory.getLogger(AudioStreamingBroadcaster.class);
 
     public static final int PROCESSOR_RUN_INTERVAL_MS = 1000;
+    public static final int PCM_RUN_INTERVAL_MS = 180;
     private ScheduledFuture<?> mRecordingQueueProcessorFuture;
 
     private RecordingQueueProcessor mRecordingQueueProcessor = new RecordingQueueProcessor();
@@ -302,30 +304,44 @@ public abstract class AudioStreamingBroadcaster<T extends BroadcastConfiguration
                         nextRecording();
                     }
 
-                    if(mInputFrames != null && mInputFrames.hasNextFrame())
+                    if (mBroadcastFormat == BroadcastFormat.PCM)
                     {
-                        while (mInputFrames.hasNextFrame() && timeSent < PROCESSOR_RUN_INTERVAL_MS) 
+                        if(mInputFrames != null && mInputFrames.hasNextFrame())
                         {
-                            mInputFrames.nextFrame();
-                            broadcastAudio(mInputFrames.getCurrentFrame(), mInputIdentifierCollection);
-
-                            if (mBroadcastFormat == BroadcastFormat.PCM)
-                                Thread.sleep(2);
-                            else
+                            while (mInputFrames.hasNextFrame()) 
+                            {
+                                mInputFrames.nextFrame();
+                                broadcastAudio(mInputFrames.getCurrentFrame(), mInputIdentifierCollection);
                                 timeSent += mInputFrames.getCurrentFrameDuration();
+
+                                if (timeSent >= PCM_RUN_INTERVAL_MS)
+                                    Thread.sleep(2);
+                            }
                         }
                     }
-
-                    if (mBroadcastFormat != BroadcastFormat.PCM)
+                    else
                     {
-                        if((mInputFrames == null || !mInputFrames.hasNextFrame()) && timeSent < PROCESSOR_RUN_INTERVAL_MS)
+                        if(mInputFrames != null && mInputFrames.hasNextFrame())
                         {
-                            AudioFrames silenceFrames = mSilenceGenerator.generate(PROCESSOR_RUN_INTERVAL_MS - mTimeOverrun - timeSent);
-                            while(silenceFrames.hasNextFrame())
+                            while (mInputFrames.hasNextFrame() && timeSent < PROCESSOR_RUN_INTERVAL_MS) 
                             {
-                                silenceFrames.nextFrame();
-                                broadcastAudio(silenceFrames.getCurrentFrame(), null);
-                                timeSent += silenceFrames.getCurrentFrameDuration();
+                                mInputFrames.nextFrame();
+                                broadcastAudio(mInputFrames.getCurrentFrame(), mInputIdentifierCollection);
+                                timeSent += mInputFrames.getCurrentFrameDuration();
+                            }
+                        }
+
+                        if (mBroadcastFormat != BroadcastFormat.PCM)
+                        {
+                            if((mInputFrames == null || !mInputFrames.hasNextFrame()) && timeSent < PROCESSOR_RUN_INTERVAL_MS)
+                            {
+                                AudioFrames silenceFrames = mSilenceGenerator.generate(PROCESSOR_RUN_INTERVAL_MS - mTimeOverrun - timeSent);
+                                while(silenceFrames.hasNextFrame())
+                                {
+                                    silenceFrames.nextFrame();
+                                    broadcastAudio(silenceFrames.getCurrentFrame(), null);
+                                    timeSent += silenceFrames.getCurrentFrameDuration();
+                                }
                             }
                         }
                     }
