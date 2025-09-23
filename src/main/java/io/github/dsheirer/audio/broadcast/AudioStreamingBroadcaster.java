@@ -314,10 +314,8 @@ public abstract class AudioStreamingBroadcaster<T extends BroadcastConfiguration
                                 broadcastAudio(mInputFrames.getCurrentFrame(), mInputIdentifierCollection);
                                 timeSent += mInputFrames.getCurrentFrameDuration();
 
-                                spin(3);
+                                spin(5);
                             }
-
-                            spin(20);
                         }
                     }
                     else

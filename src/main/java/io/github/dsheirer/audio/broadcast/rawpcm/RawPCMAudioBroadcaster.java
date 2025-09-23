@@ -129,8 +129,25 @@ public class RawPCMAudioBroadcaster extends AudioStreamingBroadcaster
                 //mLog.debug("Sending audio packet to {}:{}, len {}, srcId {}, dstId {}", mConfiguration.getHost(),
                 //        mConfiguration.getPort(), pkt.length, srcId, dstId);
                 mSocket.send(packet);
+                spin(5);
             } catch (IOException e) {
                 mLog.error("Failed to send audio packet", e);
+            }
+        }
+    }
+
+    /**
+     * 
+     * @param delay_in_milliseconds
+     */
+    private static void spin(long delay_in_milliseconds) {
+        long delay_in_nanoseconds = delay_in_milliseconds * 1000000;
+        long start_time = System.nanoTime();
+        while (true) {
+            long now = System.nanoTime();
+            long time_spent_sleeping_thus_far = now - start_time;
+            if (time_spent_sleeping_thus_far >= delay_in_nanoseconds) {
+                break;
             }
         }
     }

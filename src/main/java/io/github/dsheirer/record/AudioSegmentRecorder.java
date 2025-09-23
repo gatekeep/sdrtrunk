@@ -184,19 +184,23 @@ public class AudioSegmentRecorder
         if(audioSegment.hasAudio())
         {
             PCMWriter writer = new PCMWriter(AudioFormats.PCM_SIGNED_8000_HZ_16_BIT_MONO, path);
-            
-            // silence leader padding
+
+            ByteBuffer silence = ByteBuffer.allocate(320 * 10);
+            for (int i = 0; i < 10; i++) {
+                silence.put(new byte[320]);
+            }
+
             if (userPreferences.getMP3Preference().isRecordPCMLeader()) {
-                ByteBuffer silence = ByteBuffer.allocate(320 * 24);
-                for (int i = 0; i < 24; i++) {
-                    silence.put(new byte[320]);
-                }
                 writer.writeData(silence);
             }
 
             for(float[] audioBuffer: audioSegment.getAudioBuffers())
             {
                 writer.writeData(ConversionUtils.convertToSigned16BitSamples(audioBuffer));
+            }
+
+            if (userPreferences.getMP3Preference().isRecordPCMLeader()) {
+                writer.writeData(silence);
             }
 
             writer.close();
