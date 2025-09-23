@@ -306,7 +306,7 @@ public abstract class AudioStreamingBroadcaster<T extends BroadcastConfiguration
 
                     if (mBroadcastFormat == BroadcastFormat.PCM)
                     {
-                        if(mInputFrames != null && mInputFrames.hasNextFrame())
+                        if (mInputFrames != null && mInputFrames.hasNextFrame())
                         {
                             while (mInputFrames.hasNextFrame()) 
                             {
@@ -314,9 +314,10 @@ public abstract class AudioStreamingBroadcaster<T extends BroadcastConfiguration
                                 broadcastAudio(mInputFrames.getCurrentFrame(), mInputIdentifierCollection);
                                 timeSent += mInputFrames.getCurrentFrameDuration();
 
-                                if (timeSent >= PCM_RUN_INTERVAL_MS)
-                                    Thread.sleep(2);
+                                spin(3);
                             }
+
+                            spin(20);
                         }
                     }
                     else
@@ -331,17 +332,14 @@ public abstract class AudioStreamingBroadcaster<T extends BroadcastConfiguration
                             }
                         }
 
-                        if (mBroadcastFormat != BroadcastFormat.PCM)
+                        if((mInputFrames == null || !mInputFrames.hasNextFrame()) && timeSent < PROCESSOR_RUN_INTERVAL_MS)
                         {
-                            if((mInputFrames == null || !mInputFrames.hasNextFrame()) && timeSent < PROCESSOR_RUN_INTERVAL_MS)
+                            AudioFrames silenceFrames = mSilenceGenerator.generate(PROCESSOR_RUN_INTERVAL_MS - mTimeOverrun - timeSent);
+                            while(silenceFrames.hasNextFrame())
                             {
-                                AudioFrames silenceFrames = mSilenceGenerator.generate(PROCESSOR_RUN_INTERVAL_MS - mTimeOverrun - timeSent);
-                                while(silenceFrames.hasNextFrame())
-                                {
-                                    silenceFrames.nextFrame();
-                                    broadcastAudio(silenceFrames.getCurrentFrame(), null);
-                                    timeSent += silenceFrames.getCurrentFrameDuration();
-                                }
+                                silenceFrames.nextFrame();
+                                broadcastAudio(silenceFrames.getCurrentFrame(), null);
+                                timeSent += silenceFrames.getCurrentFrameDuration();
                             }
                         }
                     }
@@ -354,6 +352,22 @@ public abstract class AudioStreamingBroadcaster<T extends BroadcastConfiguration
                 }
 
                 mProcessing.set(false);
+            }
+        }
+
+        /**
+         * 
+         * @param delay_in_milliseconds
+         */
+        private static void spin(long delay_in_milliseconds) {
+            long delay_in_nanoseconds = delay_in_milliseconds * 1000000;
+            long start_time = System.nanoTime();
+            while (true) {
+                long now = System.nanoTime();
+                long time_spent_sleeping_thus_far = now - start_time;
+                if (time_spent_sleeping_thus_far >= delay_in_nanoseconds) {
+                    break;
+                }
             }
         }
 

@@ -29,7 +29,8 @@ public class PCMFrameTools {
 
     private final static Logger mLog = LoggerFactory.getLogger(PCMFrameTools.class);
 
-    public final static int PCM_SAMPLE_LENGTH = 320; // 20ms of audio at 8000 samples per second
+    public final static int PCM_SAMPLES_LENGTH = 160; // 20ms of audio at 8000 samples per second
+    public final static int PCM_SAMPLE_LENGTH_BYTES = 320; // 20ms of audio at 8000 samples per second
 
     private PCMFrameTools() {}
 
@@ -43,23 +44,39 @@ public class PCMFrameTools {
         List<byte[]> frames = new ArrayList<>();
         int audioDuration = 0;
 
-        int offset = 0;
-        while(offset < input.length)
-        {
-            byte[] audio = Arrays.copyOfRange(input, offset, offset + FastMath.min(input.length - offset, PCM_SAMPLE_LENGTH));
-            if (audio.length < PCM_SAMPLE_LENGTH) {
-                mLog.warn("PCMAudioFrames.split() input audio egment < PCM_SAMPLE_LENGTH, filling missing audio");
+        int remaining = input.length % PCM_SAMPLE_LENGTH_BYTES;
 
-                byte[] paddedAudio = new byte[PCM_SAMPLE_LENGTH];
+        int offset = 0;
+        while (offset < input.length)
+        {
+            byte[] audio = Arrays.copyOfRange(input, offset, offset + FastMath.min(input.length - offset, PCM_SAMPLE_LENGTH_BYTES));
+            if (audio.length < PCM_SAMPLE_LENGTH_BYTES) {
+                mLog.warn("PCMAudioFrames.split() input audio segment < PCM_SAMPLE_LENGTH, filling missing audio");
+
+                byte[] paddedAudio = new byte[PCM_SAMPLE_LENGTH_BYTES];
                 System.arraycopy(audio, 0, paddedAudio, 0, audio.length);
                 frames.add(paddedAudio);
             } else {
                 frames.add(audio);
             }
 
-            audioDuration += (int) (((float) PCM_SAMPLE_LENGTH / (float) 8000 / (float) 1) * 1000);
-            offset += PCM_SAMPLE_LENGTH;
+            audioDuration += (int) (((float) PCM_SAMPLES_LENGTH / (float) 8000 / (float) 1) * 1000);
+            offset += PCM_SAMPLE_LENGTH_BYTES;
         }
+
+        if (remaining > 0) {
+            mLog.warn("PCMAudioFrames.split() input audio has {} remaining bytes, filling with pad audio", remaining);
+
+            byte[] audio = Arrays.copyOfRange(input, input.length - remaining, input.length);
+
+            byte[] paddedAudio = new byte[PCM_SAMPLE_LENGTH_BYTES];
+            System.arraycopy(audio, 0, paddedAudio, 0, audio.length);
+            frames.add(paddedAudio);
+            audioDuration += (int) (((float) PCM_SAMPLES_LENGTH / (float) 8000 / (float) 1) * 1000);
+        }
+
+        mLog.debug("PCMFrameTools.split() input audio has {} bytes, {} full frames, {} remaining bytes, {} processed frames, total {}ms",
+                input.length, (input.length / PCM_SAMPLE_LENGTH_BYTES), remaining, frames.size(), audioDuration);
 
         return new PCMAudioFrames(audioDuration, frames);
     }

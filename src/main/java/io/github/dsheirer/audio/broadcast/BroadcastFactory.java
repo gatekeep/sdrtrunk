@@ -42,7 +42,6 @@ import io.github.dsheirer.audio.convert.ISilenceGenerator;
 import io.github.dsheirer.audio.convert.InputAudioFormat;
 import io.github.dsheirer.audio.convert.MP3Setting;
 import io.github.dsheirer.audio.convert.MP3SilenceGenerator;
-import io.github.dsheirer.audio.convert.PCMSilenceGenerator;
 import io.github.dsheirer.preference.UserPreferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -150,7 +149,7 @@ public class BroadcastFactory
             case MP3:
                 return new MP3SilenceGenerator(inputAudioFormat, mp3Setting);
             case PCM:
-                return new PCMSilenceGenerator(inputAudioFormat, mp3Setting);
+                return null; // PCM doesn't have a silence generator
             default:
                 throw new IllegalArgumentException("Unrecognized broadcast format [" + format +
                     "] can't create silence generator");
