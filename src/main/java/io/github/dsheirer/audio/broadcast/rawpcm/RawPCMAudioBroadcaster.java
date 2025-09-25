@@ -129,10 +129,11 @@ public class RawPCMAudioBroadcaster extends AudioStreamingBroadcaster
                 //mLog.debug("Sending audio packet to {}:{}, len {}, srcId {}, dstId {}", mConfiguration.getHost(),
                 //        mConfiguration.getPort(), pkt.length, srcId, dstId);
                 mSocket.send(packet);
-                spin(5);
             } catch (IOException e) {
                 mLog.error("Failed to send audio packet", e);
             }
+
+            spin(5);
         }
     }
 

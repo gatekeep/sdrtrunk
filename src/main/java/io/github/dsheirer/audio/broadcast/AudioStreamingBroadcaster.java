@@ -313,8 +313,6 @@ public abstract class AudioStreamingBroadcaster<T extends BroadcastConfiguration
                                 mInputFrames.nextFrame();
                                 broadcastAudio(mInputFrames.getCurrentFrame(), mInputIdentifierCollection);
                                 timeSent += mInputFrames.getCurrentFrameDuration();
-
-                                spin(5);
                             }
                         }
                     }
@@ -350,22 +348,6 @@ public abstract class AudioStreamingBroadcaster<T extends BroadcastConfiguration
                 }
 
                 mProcessing.set(false);
-            }
-        }
-
-        /**
-         * 
-         * @param delay_in_milliseconds
-         */
-        private static void spin(long delay_in_milliseconds) {
-            long delay_in_nanoseconds = delay_in_milliseconds * 1000000;
-            long start_time = System.nanoTime();
-            while (true) {
-                long now = System.nanoTime();
-                long time_spent_sleeping_thus_far = now - start_time;
-                if (time_spent_sleeping_thus_far >= delay_in_nanoseconds) {
-                    break;
-                }
             }
         }
 
