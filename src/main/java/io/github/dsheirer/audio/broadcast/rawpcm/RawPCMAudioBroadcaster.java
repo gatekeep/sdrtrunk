@@ -44,6 +44,20 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
+import org.apache.mina.core.buffer.IoBuffer;
+import org.apache.mina.core.service.IoConnector;
+import org.apache.mina.core.future.ConnectFuture;
+import org.apache.mina.core.session.IoSession;
+import org.apache.mina.core.service.IoHandlerAdapter;
+import org.apache.mina.transport.socket.nio.NioDatagramConnector;
+
+import org.apache.mina.core.filterchain.IoFilterAdapter;
+import org.apache.mina.core.session.IoSession;
+import org.apache.mina.core.write.WriteRequest;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 public class RawPCMAudioBroadcaster extends AudioStreamingBroadcaster
 {
     private final static Logger mLog = LoggerFactory.getLogger(RawPCMAudioBroadcaster.class);
@@ -52,7 +66,9 @@ public class RawPCMAudioBroadcaster extends AudioStreamingBroadcaster
     private IBroadcastMetadataUpdater mMetadataUpdater;
     protected AliasModel mAliasModel;
 
-    private DatagramSocket mSocket;
+    private NioDatagramConnector mConnector;
+    private ConnectFuture mConnectFuture;
+    private IoSession mSession;
 
     /**
      * Creates an Raw PCM compatible broadcaster using UDP.  This broadcaster is
@@ -67,12 +83,17 @@ public class RawPCMAudioBroadcaster extends AudioStreamingBroadcaster
         super(configuration, inputAudioFormat, mp3Setting);
 
         mConfiguration = configuration;
-        try {
-            mSocket = new DatagramSocket();
-            setBroadcastState(BroadcastState.CONNECTED);
-        } catch (IOException e) {
-            mLog.error("Failed to setup raw PCM audio broadcaster", e);
-        }
+
+        mConnector = new NioDatagramConnector();
+        mConnector.setHandler(new RawPCMAudioBroadcastHandler());
+
+        mConnector.getFilterChain().addLast("delayFilter", new DelayedWriteFilter(10)); // 10 ms delay between writes
+
+        mConnectFuture = mConnector.connect(new InetSocketAddress(mConfiguration.getHost(), mConfiguration.getPort()));
+        mConnectFuture.awaitUninterruptibly();
+        mSession = mConnectFuture.getSession();
+
+        setBroadcastState(BroadcastState.CONNECTED);
     }
 
     /**
@@ -81,7 +102,7 @@ public class RawPCMAudioBroadcaster extends AudioStreamingBroadcaster
     @Override
     protected void broadcastAudio(byte[] audio, IdentifierCollection identifierCollection)
     {
-        if (audio != null && audio.length > 0) {
+        if (audio != null && audio.length > 0 && mSession != null && mSession.isConnected()) {
             byte[] pkt = new byte[PCMFrameTools.PCM_SAMPLE_LENGTH_BYTES + 12];
             int pktOffs = 0;
             int length = PCMFrameTools.PCM_SAMPLE_LENGTH_BYTES;
@@ -123,33 +144,10 @@ public class RawPCMAudioBroadcaster extends AudioStreamingBroadcaster
             pkt[2 + pktOffs] = (byte) ((srcId >> 8) & 255);
             pkt[3 + pktOffs] = (byte) ((srcId >> 0) & 255);
 
-            try {
-                DatagramPacket packet = new DatagramPacket(pkt, pkt.length,
-                        InetAddress.getByName(mConfiguration.getHost()), mConfiguration.getPort());
-                //mLog.debug("Sending audio packet to {}:{}, len {}, srcId {}, dstId {}", mConfiguration.getHost(),
-                //        mConfiguration.getPort(), pkt.length, srcId, dstId);
-                mSocket.send(packet);
-            } catch (IOException e) {
-                mLog.error("Failed to send audio packet", e);
-            }
-
-            spin(5);
-        }
-    }
-
-    /**
-     * 
-     * @param delay_in_milliseconds
-     */
-    private static void spin(long delay_in_milliseconds) {
-        long delay_in_nanoseconds = delay_in_milliseconds * 1000000;
-        long start_time = System.nanoTime();
-        while (true) {
-            long now = System.nanoTime();
-            long time_spent_sleeping_thus_far = now - start_time;
-            if (time_spent_sleeping_thus_far >= delay_in_nanoseconds) {
-                break;
-            }
+            IoBuffer buf = IoBuffer.allocate(pkt.length).setAutoExpand(false);
+            buf.put(pkt);
+            buf.flip();
+            mSession.write(buf);
         }
     }
 
@@ -178,5 +176,86 @@ public class RawPCMAudioBroadcaster extends AudioStreamingBroadcaster
         }
 
         return mMetadataUpdater;
+    }
+
+    /**
+     * IO Handler for managing Raw PCM audio connections and messages.
+     */
+    public class RawPCMAudioBroadcastHandler extends IoHandlerAdapter
+    {
+        @Override
+        public void exceptionCaught(IoSession session, Throwable cause) throws Exception
+        {
+            if(cause instanceof IOException)
+            {
+                IOException ioe = (IOException)cause;
+
+                if(ioe.getMessage() != null)
+                {
+                    String reason = ioe.getMessage();
+
+                    if(reason.startsWith("Connection reset"))
+                    {
+                        mLog.info("Streaming connection reset by remote server - reestablishing connection");
+                        disconnect();
+                    }
+                    else if(reason.startsWith("Operation timed out"))
+                    {
+                        mLog.info("Streaming connection timed out - resetting connection");
+                        disconnect();
+                    }
+                    else
+                    {
+                        setBroadcastState(BroadcastState.ERROR);
+                        disconnect();
+                        mLog.error("Unrecognized IO error: " + reason + ". Streaming halted.");
+                    }
+                }
+                else
+                {
+                    setBroadcastState(BroadcastState.ERROR);
+                    disconnect();
+                    mLog.error("Unspecified IO error - streaming halted.");
+                }
+            }
+            else
+            {
+                mLog.error("Broadcast error", cause);
+                setBroadcastState(BroadcastState.ERROR);
+                disconnect();
+            }
+        }
+
+        @Override
+        public void messageReceived(IoSession session, Object object) throws Exception
+        {
+            /* stub */
+        }
+    }
+
+    /**
+     * IoFilter that delays write operations by a specified amount of time.
+     */
+    public class DelayedWriteFilter extends IoFilterAdapter {
+        private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        private final long delayMillis;
+
+        public DelayedWriteFilter(long delayMillis) {
+            this.delayMillis = delayMillis;
+        }
+
+        @Override
+        public void filterWrite(NextFilter nextFilter, IoSession session, WriteRequest writeRequest) throws Exception {
+            // Schedule the actual write operation to occur after the specified delay
+            scheduler.schedule(() -> {
+                // The actual write happens here, on a different thread
+                nextFilter.filterWrite(session, writeRequest);
+            }, delayMillis, TimeUnit.MILLISECONDS);
+        }
+
+        // Don't forget to shut down the scheduler when your application closes
+        public void shutdown() {
+            scheduler.shutdown();
+        }
     }
 }
